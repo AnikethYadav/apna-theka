@@ -1,0 +1,44 @@
+data_1<-read.csv("train.csv",stringsAsFactors = T)### impoting the training files
+ncol(data_1)
+str(data_1)
+data_2<-as.data.frame(lapply(data_1[2:6],function(x) scale(as.numeric(as.factor(x)))))
+str(data_2)
+data_3<-cbind(data_2,data_1$type)
+str(data_3)
+
+## import libraries
+library(nnet)
+library(caret)
+library(class)
+## split data in train and test
+set.seed(4)
+s=sample(1:nrow(data_3),0.5*nrow(data_3))
+train$bone_length
+train
+train<-data_3[s,]
+test<-data_3[-s,]
+train_knn<-train[,-6]#### remove labels for arguments in knn
+test_knn<-test[,-6]#### same as above
+test_actuals<-test[,6]#### for use in confusion matrix
+train_actuals<-train[,6]
+sqrt(nrow(data_3))###appx value of k in knn
+#### using knn
+predicts<-knn(train_knn,test_knn,train_actuals,k=17)
+table(predicts,test_actuals)
+confusionMatrix(model,test_actuals)
+
+##### now import test file
+test_new<-read.csv("test.csv")
+test_new$color<-as.numeric(test_new$color)
+for(i in 2:ncol(test_new)){
+  test_new[,i]<-scale(test_new[,i])
+}
+colnames(test_new)
+test_new_knn<-test_new[,c(2:6)]
+sqrt(nrow(test_new))
+predicts<-knn(train=train_knn,test=test_new_knn,cl=train_actuals,k=23)
+predicts<-as.character(predicts)
+ans<-cbind(test_new$id,predicts)
+head(ans)
+#### write it into a new file
+write.csv(ans,"sample_submission_KNN.csv")
