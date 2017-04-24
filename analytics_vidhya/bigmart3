@@ -1,0 +1,157 @@
+train<-read.csv("Train.csv",na.strings = c(""," ","NA"))
+attach(train)
+#data cleaning
+m<-aggregate(Item_Weight~Item_Type,train,mean)
+m
+####these all are 0's
+#fat
+sum(is.na(Item_Fat_Content))
+#0 na in fat content
+#visibility
+sum(is.na(Item_Visibility))
+#item type
+sum(is.na(Item_Type))
+#MRP item
+sum(is.na(Item_MRP))
+#outlet identifier
+sum(is.na(Outlet_Identifier))
+#establishment year
+sum(is.na(Outlet_Establishment_Year))
+##outlet type
+sum(is.na(Outlet_Type))
+#location type
+sum(is.na(Outlet_Location_Type))
+##the above contain no NA
+
+
+
+##outlet size
+sum(is.na(Outlet_Size))
+##NA's found
+
+
+#####replacing lf,low fat etc under a same label
+library(plyr)
+train$item Item_Fat_Content<-revalue(train$Item_Fat_Content,c("LF"="Low",))
+
+
+
+
+
+class(Outlet_Size)   # already a factor
+library(nnet)
+str(train$Outlet_Size)
+train$Outlet_Size<-as.factor(Outlet_Size)
+train$Out<-relevel(train$Outlet_Size, ref="Medium")
+mymodel<-multinom(Outlet_Size~Outlet_Type+Outlet_Identifier+Outlet_Location_Type, data=train)
+summary(mymodel) ###nice model, very less erorr
+
+##prediction
+train$predicts<-predict(mymodel,newdata=train)
+for(i in 1:nrow(train)){
+  if(is.na(train[i,"Outlet_Size"])){
+    train[i,"Outlet_Size"]<-predict(mymodel,newdata=train[i,],type = "class")
+  }
+}
+##create a new csv file with updated outlet_sizes
+write.csv(train,"train_outelt_type_predicted.csv")
+sum(is.na(train$Outlet_Size))##we find it to be zero
+
+
+##item weight
+sum(is.na(Item_Weight))
+library(data.table)
+dt<-data.table(train)
+dt[,mean(Item_Weight,na.rm = T),by=Item_Type]
+#this gives mean according to item_type
+#now replace NA's with this values
+for(i in 1:nrow(train)){
+  if(train[i,"Item_Type"]==c("Dairy")){
+    if(is.na(train[i,"Item_Weight"])){
+      train[i,"Item_Weight"]<-c("13.42607")
+    }
+  }
+}
+sum(is.na(train$Item_Weight))
+
+
+for(i in 1:nrow(train)){ 
+  if(is.na(train[i,"Item_Weight"]) && train[i,"Item_Type"]=="Soft Drinks"){
+    train[i,"Item_Weight"]<-"11.84746"
+  }}
+
+for(i in 1:nrow(train)){ 
+  if(is.na(train[i,"Item_Weight"]) && train[i,"Item_Type"]=="Meat"){
+    train[i,"Item_Weight"]<-"13.22"
+  }}
+for(i in 1:nrow(train)){ 
+  if(is.na(train[i,"Item_Weight"]) && train[i,"Item_Type"]=="Fruits and Vegetables"){
+    train[i,"Item_Weight"]<-"12.81734"
+  }}
+
+for(i in 1:nrow(train)){ 
+  if(is.na(train[i,"Item_Weight"]) && train[i,"Item_Type"]=="Household"){
+    train[i,"Item_Weight"]<-"13.38"
+  }}
+for(i in 1:nrow(train)){ 
+  if(is.na(train[i,"Item_Weight"]) && train[i,"Item_Type"]=="Baking Goods"){
+    train[i,"Item_Weight"]<-"12.27"
+  }}
+for(i in 1:nrow(train)){ 
+  if(is.na(train[i,"Item_Weight"]) && train[i,"Item_Type"]=="Snack Foods"){
+    train[i,"Item_Weight"]<-"13.00"
+  }}
+for(i in 1:nrow(train)){ 
+  if(is.na(train[i,"Item_Weight"]) && train[i,"Item_Type"]=="Frozen Foods"){
+    train[i,"Item_Weight"]<-"12.85734"
+  }}
+for(i in 1:nrow(train)){ 
+  if(is.na(train[i,"Item_Weight"]) && train[i,"Item_Type"]=="Breakfast"){
+    train[i,"Item_Weight"]<-"12.76"
+  }}
+for(i in 1:nrow(train)){ 
+  if(is.na(train[i,"Item_Weight"]) && train[i,"Item_Type"]=="Health and Hygiene"){
+    train[i,"Item_Weight"]<-"13.14"
+  }}
+for(i in 1:nrow(train)){ 
+  if(is.na(train[i,"Item_Weight"]) && train[i,"Item_Type"]=="Hard Drinks"){
+    train[i,"Item_Weight"]<-"11.40"
+  }}
+for(i in 1:nrow(train)){ 
+  if(is.na(train[i,"Item_Weight"]) && train[i,"Item_Type"]=="Canned"){
+    train[i,"Item_Weight"]<-"12.30"
+  }}
+for(i in 1:nrow(train)){ 
+  if(is.na(train[i,"Item_Weight"]) && train[i,"Item_Type"]=="Breads"){
+    train[i,"Item_Weight"]<-"11.34"
+  }}
+for(i in 1:nrow(train)){ 
+  if(is.na(train[i,"Item_Weight"]) && train[i,"Item_Type"]=="Starchy Foods"){
+    train[i,"Item_Weight"]<-"13.69"
+  }}
+for(i in 1:nrow(train)){ 
+  if(is.na(train[i,"Item_Weight"]) && train[i,"Item_Type"]=="Others"){
+    train[i,"Item_Weight"]<-"13.85"
+  }}
+for(i in 1:nrow(train)){ 
+  if(is.na(train[i,"Item_Weight"]) && train[i,"Item_Type"]=="Seafood"){
+    train[i,"Item_Weight"]<-"12.55"
+  }}
+
+
+
+
+
+
+sum(is.na(train$Item_Weight))
+write.csv(train,"train_EDA_complte.csv")
+train_EDA<-read.csv("train_EDA_complte.csv")
+attach(train_EDA)
+##LM for prediction of item_outlet_sales
+model_lm<-lm(train$Item_Outlet_Sales~Outlet_Identifier+Outlet_Location_Type+ Outlet_Type+ Outlet_Size + Item_MRP+Item_Visibility+Item_Identifier+Item_Fat_Content+Item_Weight, data = train_EDA)
+summary(model_lm)$r.squared
+
+model_lm_1<-lm(train$Item_Outlet_Sales~Outlet_Location_Type+ Outlet_Type+ Item_MRP+Item_Visibility+Item_Fat_Content+Item_Weight, data = train_EDA)
+
+install.packages("faraway")
+vif(model_lm_1)
