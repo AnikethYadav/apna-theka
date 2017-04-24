@@ -1,0 +1,124 @@
+loan<-read.csv("loan_train.csv",na.strings = "")
+library(rattle)
+library(rpart.plot)
+library(RColorBrewer)
+
+attach(loan)
+summary(loan)
+#data cleansing
+#married
+loan$Married[is.na(loan$Married)] <- "Yes"
+
+#dependents
+loan$Dependents[which(is.na(loan$Dependents))]<-"0"
+
+
+
+summary(loan$Self_Employed)
+
+#self_employed
+loan$Self_Employed[which(is.na(loan$Self_Employed))]<-"No"
+summary(loan$ApplicantIncome)
+summary(loan$CoapplicantIncome)
+sum(is.na(loan$CoapplicantIncome))
+sum(is.na(loan$LoanAmount))
+
+#credit_history
+table(loan$Credit_History)
+loan$Credit_History[which(is.na(loan$Credit_History))]<-c("1") #
+
+sum(is.na(loan$Property_Area))
+
+sum(is.na(loan$Loan_Status))
+
+#trying linear regression
+lm_1<-lm(LoanAmount~ApplicantIncome+CoapplicantIncome+Loan_Amount_Term,data=loan)
+plot(LoanAmount~ApplicantIncome+CoapplicantIncome+Loan_Amount_Term)
+abline(lm_1)
+summary(lm_1)$r.squared
+
+for(i in 1:nrow(loan)){
+  if(is.na(loan[i,"LoanAmount"])){
+    loan[i,"LoanAmount"]=predict(lm_1,newdata = loan[i,])
+  }
+}
+
+ncol(loan)
+#DecisionTree model
+ncol(loan)
+cols<-c(2:13)
+loan <- subset(loan,select=c(2:13))
+print(cols)
+model <- rpart(Loan_Status~.,data = loan,method = "class")
+plot(model)
+text(model,pretty="true")
+loan$Loan_Status_DT<-predict(model,newdata = loan,type = "class")
+write.csv(loan,"DT_trial.csv")
+ncol(loan)
+
+
+
+#Prediction on test data
+
+
+
+#data cleaning on test data set
+new_loan<-read.csv("loan_test.csv",na.strings = "")
+
+#gender
+sum(is.na(new_loan$Gender))
+table(new_loan$Gender)
+new_loan$Gender[which(is.na(new_loan$Gender))]<-"Male"
+
+#married
+sum(is.na(new_loan$Married))
+
+#dependents
+sum(is.na(new_loan$Dependents))
+new_loan$Dependents[which(is.na(new_loan$Dependents))]<-"0"
+
+#education
+sum(is.na(new_loan$Education))
+
+#self_employed
+sum(is.na(new_loan$Self_Employed))
+table(new_loan$Self_Employed)
+new_loan$Self_Employed[which(is.na(new_loan$Self_Employed))]<-"No"
+
+#applicantIncome
+sum(is.na(new_loan$ApplicantIncome))
+
+#coapplicantincome
+sum(is.na(new_loan$CoapplicantIncome))
+
+#loanamount
+sum(is.na(new_loan$LoanAmount))
+#filling NA's with linear regression
+#trying linear regression
+lm_2<-lm(LoanAmount~ApplicantIncome+CoapplicantIncome+Loan_Amount_Term,data=new_loan)
+summary(lm_2)$r.squared
+
+
+for(i in 1:nrow(new_loan)){
+  if(is.na(new_loan[i,"LoanAmount"])){
+    new_loan[i,"LoanAmount"]=predict(lm_2,newdata = new_loan[i,])
+  }
+}
+
+#credit_history
+sum(is.na(new_loan$Credit_History))
+table(new_loan$Credit_History)
+new_loan$Credit_History[which(is.na(new_loan$Credit_History))]<-"1"
+
+#property_area
+sum(is.na(new_loan$Property_Area))
+
+#prediction on test data set
+ncol(new_loan)
+new_loan<-subset(new_loan,select = c(2:12))
+new_loan$fitted_values<-predict(model,newdata=new_loan,type = "class")
+new_loan$fitted_values
+write.csv(new_loan,"sample_submission.csv")
+
+
+
