@@ -1,0 +1,48 @@
+###################### READ FILE
+hr<-read.csv("Book1.csv",header = F)
+hr
+
+########################## PLOTTING TIME SERIES
+winter<-hr[,2]
+winter_ts<-ts(winter,start = c(1997))
+is.ts(winter_ts)
+plot.ts(winter_ts)
+
+
+spring<-hr[,3]
+spring_ts<-ts(spring,start = c(1997),frequency = 1)
+plot.ts(spring_ts)
+
+
+summer<-hr[,4]
+summer_ts<-ts(summer,start = c(1997),frequency = 1)
+plot.ts(summer_ts)
+
+
+fall<-hr[,5]
+fall_ts<-ts(fall,frequency = 1,start = c(1997))
+plot.ts(fall_ts)
+
+
+
+######################### FORECASTING
+plot(winter_ts)
+winter_ts_forecasts<-HoltWinters(winter_ts,gamma = F,l.start = 35)
+plot(winter_ts_forecasts)
+
+library(forecast)
+winter_ts_forecasts2<-forecast.HoltWinters(winter_ts_forecasts,h=5)### reasonable growth
+plot(winter_ts_forecasts2,main = "winter forecasts")
+
+
+spring_ts_forecasts<-HoltWinters(spring_ts,gamma = F,l.start = 44)
+spring_ts_forecasts2<-forecast.HoltWinters(spring_ts_forecasts,h=5)#### better growth than winter
+plot(spring_ts_forecasts2,main = "spring forecasts")
+
+summer_ts_forecasts<-HoltWinters(summer_ts,gamma = F,l.start = 54)
+summer_ts_forecasts2<-forecast.HoltWinters(summer_ts_forecasts,h=5)####### has very high growth
+plot(summer_ts_forecasts2, main = " summer forecasts")
+
+fall_ts_forecasts<-HoltWinters(fall_ts,gamma = F,l.start = 49)
+fall_ts_forecasts2<-forecast.HoltWinters(fall_ts_forecasts,h=5)
+plot(fall_ts_forecasts2, main = " fall forecasts")     ############### negative growth
