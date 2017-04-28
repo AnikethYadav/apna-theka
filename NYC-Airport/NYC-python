@@ -1,0 +1,78 @@
+
+# coding: utf-8
+
+# In[4]:
+
+path='C:/Users/Aniketh/Documents/UpX/Self-Projects/Project_1_NYC-Flight data/'
+
+
+# In[5]:
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+get_ipython().magic('matplotlib inline')
+
+
+# In[6]:
+
+df=pd.read_csv(path+'flight_data.csv',sep=',')
+df.head()
+
+
+# In[8]:
+
+df_1=(df.groupby('carrier').size().sort_values(ascending=False))
+df_1=dict(df_1)
+df_1
+
+
+
+# In[ ]:
+
+
+
+
+# In[9]:
+
+df_dep=pd.DataFrame(df[df.dep_delay>0])
+df_2=(df_dep.groupby('carrier').size().sort_values(ascending=False))
+df_2=dict(df_2)
+df_2
+
+
+# In[26]:
+
+l1=['9E','AA','AS','B6','DL','EV','F9','FL','HA','MQ','OO','UA','US','VX','WN','YV']
+
+
+# In[34]:
+
+for x in l1:
+    a,b=x,(df_1[x]/df_2[x])
+    print(a,b)  
+
+
+# In[48]:
+
+##### HA is most delayed, let us find some data with HA
+df_HA=df[(df.carrier=='HA') & (df.dep_delay>0)]
+df_HA.dep_delay.mean()## 44 mins
+df_HA.origin.describe()### functions from only one place-- JFK
+### either airline or JFK
+
+
+# In[92]:
+
+df_5=df[(df.dep_delay>0)&(df.origin=="JFK")]
+df_5.carrier.describe()### most frequent is B6 16870 count
+df_5[df_5.carrier=='HA'].count() ## HA 69 times delay....all times at JFK
+df_5[df_5.carrier=='B6'].dep_delay.mean()### 37 mins avg
+df_5[df_5.carrier=='HA'].dep_delay.mean()####44 -----> it is delaying only at jfk
+df_5.dep_delay.mean()### 38 mins avg delay time at JFK
+df_6=df_5[['carrier','dep_delay']]
+df_6
+
+
+# In[70]:
+
