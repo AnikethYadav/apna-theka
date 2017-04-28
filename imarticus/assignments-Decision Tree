@@ -1,0 +1,44 @@
+data_fish<-read.csv("data.csv")
+library(rpart)
+
+sum(is.na(data_fish))
+colnames(data_fish)
+
+################## divide
+set.seed(1)
+s=sample(1:nrow(data_fish),0.5*(nrow(data_fish)))
+data_train<-data_fish[s,]
+data_test<-data_fish[-s,]
+data_test_fits<-data_test[,-1]
+data_test_1<-data_test[,1]
+
+
+########### prediction by cross validation
+library(caret)
+controlParameters<-trainControl(method = "cv",number = 10,verboseIter = T)
+model_trial<-train(yes~.,data = data_train,method="rf",trControl=controlParameters)
+predicts<-predict(model_trial,newdata =data_test_fits)
+head(predicts)
+predicts<-as.matrix(predicts)
+nrow(predicts)
+for(i in 1:nrow(predicts)){
+  if(predicts[i,]>=0.5){
+    predicts[i,]<-1
+  }
+  else{
+    predicts[i,]<-0
+  }
+}
+
+###############
+library(caret)
+table(predicts,data_test_1)
+confusionMatrix(predicts,data_test_1)
+
+
+
+
+
+##########################################
+library(ggplot2)
+ggplot(data = data_fish)+aes(y=income,x=employed)+geom_bar(stat = "identity")+facet_grid(~yes)
