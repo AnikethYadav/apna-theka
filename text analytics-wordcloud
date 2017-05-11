@@ -1,0 +1,119 @@
+library("tm")
+library("wordcloud")
+library("textir")
+library(rJava)
+library("maptpx")
+library(qdap)
+library(maptpx)
+library("twitteR")
+library("ROAuth")
+library("RCurl")
+
+
+## lot of authentication stuff----making a twitter api etc
+consumer_key<-"5A321TceJEz1wqhrPyN9KHGHG"
+consumer_secret<-"3S30OFbePCAU5uM3tfHWgJx2b4fV1MXmfuhetzBrMUjeVClR7p"
+access_token<-"861172800651964416-krHGiY9iDMePIZ0ZDIoEtYhZ3IZQh3t"
+access_secret<-"Ecx1hffemobO8OYJVBT1GZ9CSEtIP77WhjZ418bqs6n4P"
+
+## ssl certificate from windows
+download.file(url = "http://curl.haxx.se/ca/cacert.pem" ,destfile="cacert.pem")
+                      #go to location and download file, then copy in directory
+
+setup_twitter_oauth(consumer_key,consumer_secret,access_token,access_secret)
+
+cred <- OAuthFactory$new(consumerKey=consumer_key, 
+                         consumerSecret=consumer_secret,
+                         requestURL='https://api.twitter.com/oauth/request_token',
+                         accessURL='https://api.twitter.com/oauth/access_token',
+                         authURL='https://api.twitter.com/oauth/authorize')
+
+cred$handshake(cainfo = system.file("CurlSSL", cainfo = "cacert.pem", package = "RCurl"))
+
+#### set ssl certs globally
+
+options(RCurlOptions = list(cainfo = system.file("CurlSSL", "cacert.pem", package = "RCurl")))
+
+#### take random tweets
+
+bjp.tweets<-searchTwitter("kashmir",n=1000,lang="en")
+head(bjp.tweets)
+
+bjp_txt<-sapply(bjp.tweets, function(x) x$getText())
+
+head(bjp_txt)
+
+bjp_txt = gsub("(RT|via)((?:\\b\\W*@\\w+)+)","", bjp_txt)# remove RT
+bjp_txt = gsub("@\\w+", "", bjp_txt)# remove @someone
+bjp_txt = gsub("#\\w+", "", bjp_txt)# remove #someone
+bjp_txt = gsub("[[:punct:]]", "", bjp_txt)# remove punctuation
+bjp_txt = gsub("[[:digit:]]", "", bjp_txt)# remove digits
+bjp_txt = gsub("http\\w+", "", bjp_txt)#remove links
+bjp_txt = gsub("[ \t]{2,}","", bjp_txt)#remove  tabs 
+bjp_txt = gsub("^\\s+|\\s+$", "", bjp_txt)#remove spaces
+bjp_txt = gsub("amp", "", bjp_txt)
+
+
+catch.error = function(x)
+{
+  # let us create a missing value for test purpose
+  #y = NA
+  # try to catch that error (NA) we just created
+  catch_error = tryCatch(tolower(x), error=function(e) e)
+  # if not an error
+  if (!inherits(catch_error, "error")){y = tolower(x)}
+  # check result if error exists, otherwise the function works fine.
+  return(y)
+}
+
+z<-c(NA,"QWER")
+catch.error(z)
+
+###converting all to lower case
+bjp_txt<-sapply(bjp_txt,catch.error)
+head(bjp_txt)
+
+bjp_txt<-bjp_txt[!is.na(bjp_txt)]# ignore all NA values
+str(bjp_txt)
+names(bjp_txt)<-NULL# remove the unecessary column headings
+## corpus and term document matrix
+#install.packages("tm")
+bjp.corpus<-Corpus(VectorSource(bjp_txt))
+#bjp.corpus
+bjp.corpus<-tm_map(bjp.corpus,removeWords,stopwords("english"))
+bjp.TDM<-TermDocumentMatrix(bjp.corpus)
+bjp.mat<-as.matrix(bjp.TDM)
+head(bjp.mat)
+word.freq<-sort(rowSums(bjp.mat),decreasing = T)
+str(word.freq)
+#word.freq<-as.matrix(word.freq)
+#head(word.freq)
+#word.frq.mod<-word.freq[-c(1,2),]
+#head(word.frq.mod)
+#barplot of frequent words
+barplot(word.freq[1:20],xlab = "frequent words",cex.names = .7)
+
+#wordclouds
+wordcloud(words = names(word.freq),freq = word.freq,min.freq =20,colors = rainbow(800))
+
+##########################################################################################
+
+#install.packages("RSentiment")
+#install.packages("sentimentr")
+#install.packages("syuzhet")
+library(syuzhet)
+library(RSentiment)
+library(sentimentr)
+
+
+##################################################################################
+
+bjp_emo<-get_nrc_sentiment(bjp_txt)
+str(bjp_emo)
+library(ggplot2)
+
+
+
+
+###########################################################
+
