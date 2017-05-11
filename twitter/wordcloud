@@ -11,10 +11,10 @@ library("RCurl")
 
 
 ## lot of authentication stuff----making a twitter api etc
-consumer_key<-"5A321TceJEz1wqhrPyN9KHGHG"
-consumer_secret<-"3S30OFbePCAU5uM3tfHWgJx2b4fV1MXmfuhetzBrMUjeVClR7p"
-access_token<-"861172800651964416-krHGiY9iDMePIZ0ZDIoEtYhZ3IZQh3t"
-access_secret<-"Ecx1hffemobO8OYJVBT1GZ9CSEtIP77WhjZ418bqs6n4P"
+consumer_key<-""
+consumer_secret<-""
+access_token<-""
+access_secret<-""
 
 ## ssl certificate from windows
 download.file(url = "http://curl.haxx.se/ca/cacert.pem" ,destfile="cacert.pem")
